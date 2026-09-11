@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:TheOldGrimoire.ViewModels"
+             x:Class="TheOldGrimoire.Views.SuggestionsPage"
+             x:DataType="viewmodel:SuggestionsViewModel"
+             BackgroundColor="{DynamicResource Background}"
+             Title="Sugerencias">
+
+    <ScrollView BackgroundColor="{DynamicResource Background}">
+        <StackLayout Padding="20" Spacing="15">
+
+            <!-- Título y descripción -->
+            <Label Text="💡 Sugerencias de Historias"
+                   TextColor="{DynamicResource Primary}"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,10,0,5"/>
+
+            <Label Text="¿Qué historia te gustaría leer? Compartinos tu idea y la comunidad la valorará."
+                   TextColor="{DynamicResource OnSurface}"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,15"
+                   HorizontalTextAlignment="Center"/>
+
+            <!-- Línea decorativa -->
+            <BoxView HeightRequest="2"
+                     Color="{DynamicResource Primary}"
+                     HorizontalOptions="Center"
+                     WidthRequest="100"
+                     Margin="0,0,0,15"/>
+
+            <!-- Formulario -->
+            <Border BackgroundColor="{DynamicResource Surface}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 15"
+                    Padding="20"
+                    Margin="0,0,0,15">
+
+                <StackLayout Spacing="15">
+
+                    <!-- Nombre -->
+                    <Label Text="👤 Tu nombre"
+                           TextColor="{DynamicResource OnBackground}"
+                           FontAttributes="Bold"
+                           FontSize="14"/>
+
+                    <Entry x:Name="NombreEntry"
+                           Placeholder="Ej: Juan Pérez"
+                           PlaceholderColor="{DynamicResource Muted}"
+                           TextColor="{DynamicResource OnBackground}"
+                           BackgroundColor="{DynamicResource InputBackground}"
+                           Text="{Binding NombreUsuario}"/>
+
+                    <!-- Título -->
+                    <Label Text="📖 Título de la historia"
+                           TextColor="{DynamicResource OnBackground}"
+                           FontAttributes="Bold"
+                           FontSize="14"/>
+
+                    <Entry x:Name="TituloEntry"
+                           Placeholder="Ej: El Misterio de la Casa Oscura"
+                           PlaceholderColor="{DynamicResource Muted}"
+                           TextColor="{DynamicResource OnBackground}"
+                           BackgroundColor="{DynamicResource InputBackground}"
+                           Text="{Binding TituloHistoria}"/>
+
+                    <!-- Autor -->
+                    <Label Text="✍️ Autor (opcional)"
+                           TextColor="{DynamicResource OnBackground}"
+                           FontAttributes="Bold"
+                           FontSize="14"/>
+
+                    <Entry x:Name="AutorEntry"
+                           Placeholder="Ej: H.P. Lovecraft"
+                           PlaceholderColor="{DynamicResource Muted}"
+                           TextColor="{DynamicResource OnBackground}"
+                           BackgroundColor="{DynamicResource InputBackground}"
+                           Text="{Binding Autor}"/>
+
+                    <!-- Género -->
+                    <Label Text="🏷️ Género"
+                           TextColor="{DynamicResource OnBackground}"
+                           FontAttributes="Bold"
+                           FontSize="14"/>
+
+                    <Picker x:Name="GeneroPicker"
+                            Title="Seleccioná un género"
+                            TextColor="{DynamicResource OnBackground}"
+                            BackgroundColor="{DynamicResource InputBackground}"
+                            SelectedItem="{Binding GeneroSeleccionado}">
+                        <Picker.ItemsSource>
+                            <x:Array Type="{x:Type x:String}">
+                                <x:String>Terror Gótico</x:String>
+                                <x:String>Terror Cósmico</x:String>
+                                <x:String>Terror Psicológico</x:String>
+                                <x:String>Terror Corporal</x:String>
+                                <x:String>Suspenso</x:String>
+                                <x:String>Distopía</x:String>
+                                <x:String>Otro</x:String>
+                            </x:Array>
+                        </Picker.ItemsSource>
+                    </Picker>
+
+                    <!-- Descripción -->
+                    <Label Text="📝 ¿De qué trata?"
+                           TextColor="{DynamicResource OnBackground}"
+                           FontAttributes="Bold"
+                           FontSize="14"/>
+
+                    <Editor x:Name="DescripcionEditor"
+                            Placeholder="Contanos brevemente de qué trata la historia que sugerís..."
+                            PlaceholderColor="{DynamicResource Muted}"
+                            TextColor="{DynamicResource OnBackground}"
+                            BackgroundColor="{DynamicResource InputBackground}"
+                            HeightRequest="120"
+                            Text="{Binding Descripcion}"/>
+
+                </StackLayout>
+            </Border>
+
+            <!-- Botones -->
+            <StackLayout Orientation="Horizontal"
+                         HorizontalOptions="Center"
+                         Spacing="15">
+
+                <Button x:Name="GuardarButton"
+                        Text="📤 Enviar Sugerencia"
+                        BackgroundColor="{DynamicResource Primary}"
+                        TextColor="{DynamicResource OnPrimaryButton}"
+                        FontAttributes="Bold"
+                        CornerRadius="10"
+                        Padding="20,12"
+                        Command="{Binding GuardarCommand}"/>
+
+                <Button x:Name="LimpiarButton"
+                        Text="🗑️ Limpiar"
+                        BackgroundColor="{DynamicResource Destructive}"
+                        TextColor="{DynamicResource OnBackground}"
+                        CornerRadius="10"
+                        Padding="15,12"
+                        Command="{Binding LimpiarCommand}"/>
+            </StackLayout>
+
+            <!-- Mensaje -->
+            <Border x:Name="MensajeFrame"
+                   BackgroundColor="{DynamicResource Surface}"
+                   StrokeThickness="0"
+                   StrokeShape="RoundRectangle 10"
+                   Padding="15"
+                   Margin="0,10,0,0"
+                   IsVisible="{Binding MensajeVisible}">
+
+                <Label x:Name="MensajeLabel"
+                       Text="{Binding Mensaje}"
+                       TextColor="{Binding MensajeEsExito, Converter={StaticResource MensajeColorConverter}}"
+                       FontSize="14"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"/>
+            </Border>
+
+            <BoxView HeightRequest="30"/>
+
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:TheOldGrimoire.ViewModels"
+             xmlns:models="clr-namespace:TheOldGrimoire.Models"
+             x:Class="TheOldGrimoire.Views.MainPage"
+             x:DataType="viewmodel:MainViewModel"
+             BackgroundColor="{DynamicResource Background}"
+             Title="Biblioteca">
+
+    <CollectionView x:Name="HistoriasCollection"
+                    ItemsSource="{Binding Historias}"
+                    SelectionMode="Single"
+                    BackgroundColor="{DynamicResource Background}"
+                    Margin="10">
+<CollectionView.ItemTemplate>
+    <DataTemplate x:DataType="models:Historia">
+        <Grid Margin="0,8"
+              BackgroundColor="{DynamicResource Surface}"
+              Padding="10">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Imagen -->
+            <Grid Grid.Column="0"
+                  BackgroundColor="{DynamicResource SurfaceAlt}"
+                  HeightRequest="70"
+                  WidthRequest="70"
+                  Margin="0,0,10,0">
+                <Image Source="{Binding ImagenUrl}"
+                       Aspect="AspectFill"
+                       HeightRequest="60"
+                       WidthRequest="60"
+                       IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNullOrEmptyConverter}, ConverterParameter=true}"/>
+                <Label Text="📖"
+                       FontSize="30"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNullOrEmptyConverter}}"/>
+            </Grid>
+
+            <!-- Contenido -->
+            <StackLayout Grid.Column="1"
+                         Padding="10,0">
+                <Label Text="{Binding Titulo}"
+                       TextColor="{DynamicResource OnBackground}"
+                       FontSize="18"
+                       FontAttributes="Bold"/>
+
+                <Label Text="{Binding Autor}"
+                       TextColor="{DynamicResource OnSurface}"
+                       FontSize="14"/>
+
+                <FlexLayout>
+                    <Label Text="{Binding Genero}"
+                           TextColor="{DynamicResource Primary}"
+                           FontSize="12"
+                           BackgroundColor="{DynamicResource TagBackground}"
+                           Padding="6,2"/>
+                    <Label Text="{Binding Etiqueta}"
+                           TextColor="{DynamicResource Muted}"
+                           FontSize="12"
+                           BackgroundColor="{DynamicResource Surface}"
+                           Padding="6,2"
+                           Margin="5,0"/>
+                </FlexLayout>
+            </StackLayout>
+
+            <!-- ⭐ Botón de favorito + flecha -->
+            <StackLayout Grid.Column="2"
+                         Orientation="Horizontal"
+                         HorizontalOptions="End"
+                         VerticalOptions="Center"
+                         Spacing="0">
+                <Button x:Name="FavoritoButton"
+                        Text="{Binding EsFavorito, Converter={StaticResource FavoritoIconConverter}}"
+                        TextColor="{Binding EsFavorito, Converter={StaticResource FavoritoColorConverter}}"
+                        BackgroundColor="Transparent"
+                        FontSize="24"
+                        Padding="4,0"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MainViewModel}}, Path=ToggleFavoritoCommand}"
+                        CommandParameter="{Binding .}"/>
+                <Label Text="→"
+                       TextColor="{DynamicResource Primary}"
+                       FontSize="20"
+                       VerticalOptions="Center"/>
+            </StackLayout>
+        </Grid>
+    </DataTemplate>
+</CollectionView.ItemTemplate>
+    </CollectionView>
+
+</ContentPage>

@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:TheOldGrimoire"
+             xmlns:converters="clr-namespace:TheOldGrimoire.Converters"
+             xmlns:helpers="clr-namespace:TheOldGrimoire.Helpers"
+             xmlns:styles="clr-namespace:TheOldGrimoire.Resources.Styles"
+             x:Class="TheOldGrimoire.App">
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <!-- ========================================== -->
+            <!-- 1. ARCHIVOS DE RECURSOS (los que ya tenías) -->
+            <!-- ========================================== -->
+            <ResourceDictionary.MergedDictionaries>
+                <styles:Colors />
+                <ResourceDictionary Source="/Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- ========================================== -->
+            <!-- 2. CONVERTERS (TODOS)                      -->
+            <!-- ========================================== -->
+
+            <!-- Tus converters (carpeta Converters) -->
+            <converters:IsNullOrEmptyConverter x:Key="IsNullOrEmptyConverter"/>
+
+            <!-- Mis converters (carpeta Helpers) -->
+            <helpers:FavoritoIconConverter x:Key="FavoritoIconConverter" />
+            <helpers:FavoritoColorConverter x:Key="FavoritoColorConverter" />
+            <helpers:InvertBoolConverter x:Key="InvertBoolConverter" />
+<helpers:MensajeColorConverter x:Key="MensajeColorConverter" />
+            <helpers:VotoColorConverter x:Key="VotoColorConverter" />
+            <helpers:VotoNegativoColorConverter x:Key="VotoNegativoColorConverter" />
+            <helpers:HexColorConverter x:Key="HexColorConverter" />
+
+            <!-- ========================================== -->
+            <!-- 3. FUENTE POR DEFECTO (se cambia en        -->
+            <!--    Configuración)                          -->
+            <!-- ========================================== -->
+
+            <x:String x:Key="FontFamily">Times New Roman</x:String>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:TheOldGrimoire.Views"
+       x:Class="TheOldGrimoire.AppShell"
+       BackgroundColor="{DynamicResource Background}"
+       TitleColor="{DynamicResource Primary}"
+       ForegroundColor="{DynamicResource OnBackground}"
+       FlyoutBackgroundColor="{DynamicResource Background}"
+       FlyoutWidth="280">
+
+    <Shell.Resources>
+        <ResourceDictionary>
+            <!-- Estilo para todos los items del menú -->
+            <Style TargetType="FlyoutItem">
+                <Setter Property="Shell.ForegroundColor" Value="{DynamicResource OnBackground}" />
+                <Setter Property="Shell.BackgroundColor" Value="{DynamicResource FlyoutItemBackground}" />
+            </Style>
+
+            <Style TargetType="ShellItem">
+                <Setter Property="Shell.BackgroundColor" Value="{DynamicResource FlyoutItemBackground}"/>
+                <Setter Property="Shell.ForegroundColor" Value="{DynamicResource OnBackground}" />
+            </Style>
+
+            <Style TargetType="MenuItem">
+                <Setter Property="Shell.ForegroundColor" Value="{DynamicResource OnBackground}" />
+            </Style>
+        </ResourceDictionary>
+    </Shell.Resources>
+
+    <!-- Cabecera del menú (solo visible si es Flyout) -->
+    <Shell.FlyoutHeader>
+        <StackLayout BackgroundColor="{DynamicResource FlyoutItemBackground}"
+                     Padding="20,40,20,20">
+            <Label Text="📖 The Old Grimoire"
+                   TextColor="{DynamicResource Primary}"
+                   FontSize="22"
+                   FontAttributes="Bold"/>
+            <Label Text="Historias de terror"
+                   TextColor="{DynamicResource Muted}"
+                   FontSize="14"/>
+            <BoxView HeightRequest="2"
+                     Color="{DynamicResource Primary}"
+                     Margin="0,10,0,0"/>
+        </StackLayout>
+    </Shell.FlyoutHeader>
+
+<!-- Menú principal -->
+    <FlyoutItem Title="📖 Biblioteca">
+        <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}"/>
+    </FlyoutItem>
+
+<FlyoutItem Title="💡 Sugerencias">
+        <ShellContent Route="SuggestionsPage" ContentTemplate="{DataTemplate views:SuggestionsPage}"/>
+    </FlyoutItem>
+
+    <FlyoutItem Title="🔥 Comunidad">
+        <ShellContent Route="ComunidadPage" ContentTemplate="{DataTemplate views:ComunidadPage}"/>
+    </FlyoutItem>
+
+    <FlyoutItem Title="⭐ Favoritos">
+        <ShellContent Route="FavoritesPage" ContentTemplate="{DataTemplate views:FavoritesPage}"/>
+    </FlyoutItem>
+
+    <FlyoutItem Title="⚙️ Configuración">
+        <ShellContent Route="SettingsPage" ContentTemplate="{DataTemplate views:SettingsPage}"/>
+    </FlyoutItem>
+</Shell>
+    

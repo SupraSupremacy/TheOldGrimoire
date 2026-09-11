@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="TheOldGrimoire.Resources.Styles.ColorsLight">
+
+    <!-- Tema claro -->
+
+    <Color x:Key="Primary">#b8962e</Color>
+    <Color x:Key="PrimaryDark">#3a2a1f</Color>
+
+    <Color x:Key="Background">#f5f0e8</Color>
+    <Color x:Key="Surface">#ffffff</Color>
+    <Color x:Key="SurfaceAlt">#eadcd0</Color>
+    <Color x:Key="TagBackground">#f0e6d3</Color>
+    <Color x:Key="InputBackground">#efe9df</Color>
+
+    <Color x:Key="OnBackground">#1f1a14</Color>
+    <Color x:Key="OnSurface">#5c4f42</Color>
+    <Color x:Key="Muted">#8a7a7a</Color>
+    <Color x:Key="OnPrimaryButton">#1a1a1a</Color>
+    <Color x:Key="Destructive">#b5544a</Color>
+
+    <Color x:Key="DetailBody">#2d2822</Color>
+    <Color x:Key="DetailMuted">#52463c</Color>
+
+    <Color x:Key="FlyoutItemBackground">#f0e6d3</Color>
+
+</ResourceDictionary>

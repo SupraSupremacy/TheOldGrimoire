@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:TheOldGrimoire.ViewModels"
+             xmlns:models="clr-namespace:TheOldGrimoire.Models"
+             x:Class="TheOldGrimoire.Views.ComunidadPage"
+             x:DataType="viewmodel:ComunidadViewModel"
+             BackgroundColor="{DynamicResource Background}"
+             Title="🔥 Comunidad">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Cabecera -->
+        <VerticalStackLayout Grid.Row="0"
+                             Padding="16,12,16,8"
+                             Spacing="6">
+            <Label Text="🔥 Comunidad"
+                   FontSize="24"
+                   TextColor="{DynamicResource Primary}"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+            <Label Text="Sugerencias de la comunidad"
+                   FontSize="13"
+                   TextColor="{DynamicResource Muted}"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center"/>
+            <BoxView HeightRequest="2"
+                     Color="{DynamicResource Primary}"
+                     HorizontalOptions="Center"
+                     WidthRequest="80"
+                     Margin="0,2,0,0"/>
+
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+                <Border Grid.Column="0"
+                        BackgroundColor="{DynamicResource Surface}"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 10"
+                        Padding="4">
+                    <Picker Title="Filtrar sugerencias..."
+                            ItemsSource="{Binding OpcionesFiltro}"
+                            SelectedIndex="{Binding FiltroSeleccionado}"
+                            TextColor="{DynamicResource OnBackground}"/>
+                </Border>
+
+                <Button Grid.Column="1"
+                        Text="✍️ Crear"
+                        BackgroundColor="{DynamicResource Primary}"
+                        TextColor="{DynamicResource OnPrimaryButton}"
+                        FontAttributes="Bold"
+                        CornerRadius="10"
+                        Padding="14,8"
+                        VerticalOptions="Center"
+                        Command="{Binding IrASugerenciasCommand}"/>
+            </Grid>
+        </VerticalStackLayout>
+
+        <!-- Feed de sugerencias que ocupa todo el alto restante -->
+        <CollectionView Grid.Row="1"
+                        x:Name="SugerenciasCollection"
+                        ItemsSource="{Binding Sugerencias}"
+                        BackgroundColor="{DynamicResource Background}"
+                        Margin="10,0,10,0"
+                        SelectionMode="None">
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="30"
+                                     Spacing="12"
+                                     HorizontalOptions="Center"
+                                     VerticalOptions="Center">
+                    <Label Text="🕸️"
+                           FontSize="50"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Todavía no hay sugerencias"
+                           TextColor="{DynamicResource OnBackground}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Sé el primero en compartir una idea con la comunidad"
+                           TextColor="{DynamicResource Muted}"
+                           FontSize="14"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Sugerencia">
+                    <Border BackgroundColor="{DynamicResource Surface}"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 15"
+                            Padding="15,18"
+                            Margin="0,10"
+                            MinimumHeightRequest="160">
+
+                        <Grid ColumnDefinitions="36,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+
+                            <!-- ⬆️⬇️ Votos (columna izquierda) -->
+                            <VerticalStackLayout Grid.Row="0" Grid.RowSpan="5"
+                                                 Grid.Column="0"
+                                                 VerticalOptions="Start"
+                                                 Spacing="0">
+
+                                <Button Text="▲"
+                                        FontSize="18"
+                                        BackgroundColor="Transparent"
+                                        Padding="0"
+                                        HeightRequest="32"
+                                        TextColor="{Binding UsuarioVotoArriba, Converter={StaticResource VotoColorConverter}}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:ComunidadViewModel}}, Path=VotarArribaCommand}"
+                                        CommandParameter="{Binding .}"/>
+
+                                <Label Text="{Binding VotosNetos}"
+                                       TextColor="{DynamicResource Primary}"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center"/>
+
+                                <Button Text="▼"
+                                        FontSize="18"
+                                        BackgroundColor="Transparent"
+                                        Padding="0"
+                                        HeightRequest="32"
+                                        TextColor="{Binding UsuarioVotoAbajo, Converter={StaticResource VotoNegativoColorConverter}}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:ComunidadViewModel}}, Path=VotarAbajoCommand}"
+                                        CommandParameter="{Binding .}"/>
+                            </VerticalStackLayout>
+
+                            <!-- 👤 Usuario y tiempo (fila 0) -->
+                            <HorizontalStackLayout Grid.Row="0" Grid.Column="1"
+                                                   Spacing="8"
+                                                   Margin="10,0,0,5">
+                                <Label Text="👤"
+                                       FontSize="14"/>
+                                <Label Text="{Binding NombreUsuario}"
+                                       TextColor="{DynamicResource Primary}"
+                                       FontSize="14"
+                                       FontAttributes="Bold"/>
+                                <Label Text="•"
+                                       TextColor="{DynamicResource Muted}"
+                                       FontSize="14"/>
+                                <Label Text="{Binding TiempoRelativo}"
+                                       TextColor="{DynamicResource Muted}"
+                                       FontSize="12"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+
+                            <!-- 📖 Título (fila 1) -->
+                            <Label Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding Titulo}"
+                                   TextColor="{DynamicResource OnBackground}"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   Margin="10,0,0,3"/>
+
+                            <!-- ✍️ Autor y género (fila 2) -->
+                            <HorizontalStackLayout Grid.Row="2" Grid.Column="1"
+                                                   Spacing="8"
+                                                   Margin="10,0,0,5">
+                                <Label Text="{Binding Autor}"
+                                       TextColor="{DynamicResource OnSurface}"
+                                       FontSize="13"/>
+                                <Label Text="•"
+                                       TextColor="{DynamicResource Muted}"
+                                       FontSize="13"/>
+                                <Label Text="{Binding Genero}"
+                                       TextColor="{DynamicResource Primary}"
+                                       FontSize="12"
+                                       BackgroundColor="{DynamicResource TagBackground}"
+                                       Padding="6,2"/>
+                            </HorizontalStackLayout>
+
+                            <!-- 📝 Descripción (fila 3) -->
+                            <Label Grid.Row="3" Grid.Column="1"
+                                   Text="{Binding Descripcion}"
+                                   TextColor="{DynamicResource DetailMuted}"
+                                   FontSize="14"
+                                   LineHeight="1.35"
+                                   LineBreakMode="WordWrap"
+                                   MaxLines="6"
+                                   Margin="10,5,0,10"
+                                   VerticalOptions="Fill"/>
+
+                            <!-- 💬 Comentarios (fila 4) -->
+                            <HorizontalStackLayout Grid.Row="4" Grid.Column="1"
+                                                   Spacing="15"
+                                                   Margin="10,5,0,0">
+                                <Button Text="💬 Comentar"
+                                        FontSize="13"
+                                        BackgroundColor="Transparent"
+                                        Padding="0"
+                                        TextColor="{DynamicResource Muted}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:ComunidadViewModel}}, Path=ComentarCommand}"
+                                        CommandParameter="{Binding .}"/>
+
+                                <Button Text="{Binding TotalComentarios, StringFormat='📝 {0} comentarios'}"
+                                        FontSize="13"
+                                        BackgroundColor="Transparent"
+                                        Padding="0"
+                                        TextColor="{DynamicResource Muted}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:ComunidadViewModel}}, Path=VerDetalleCommand}"
+                                        CommandParameter="{Binding .}"/>
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
