@@ -20,12 +20,13 @@ public partial class FavoritesPage : ContentPage
     {
         if (e.CurrentSelection.FirstOrDefault() is Historia historia)
         {
-            var navigationParameter = new Dictionary<string, object>
+            var ruta = historia.TienePdf ? nameof(PdfViewerPage) : nameof(DetailPage);
+
+            await Shell.Current.GoToAsync(ruta, new Dictionary<string, object>
             {
                 { "Historia", historia }
-            };
+            });
 
-            await Shell.Current.GoToAsync(nameof(DetailPage), navigationParameter);
             FavoritosCollection.SelectedItem = null;
         }
     }

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Lector</title>
+    <script src="_framework/hybridwebview.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0f0f0f;
+        }
+
+        #pdfFrame {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background-color: #0f0f0f;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="pdfFrame" title="Lector de PDF"></iframe>
+
+    <script>
+        function sendMessage(message) {
+            if (window.HybridWebView && window.HybridWebView.SendRawMessage) {
+                window.HybridWebView.SendRawMessage(message);
+            }
+        }
+
+        window.loadPdf = function (path) {
+            const frame = document.getElementById('pdfFrame');
+            frame.src = 'pdfjs/web/viewer.html?file=' + encodeURIComponent(path) +
+                '&locale=es-ES#zoom=page-width';
+        };
+
+        window.addEventListener('DOMContentLoaded', function () {
+            sendMessage('pdf-ready');
+        });
+    </script>
+</body>
+</html>

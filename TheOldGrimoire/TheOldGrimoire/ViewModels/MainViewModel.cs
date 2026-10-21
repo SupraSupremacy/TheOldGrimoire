@@ -18,13 +18,18 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsRefreshing { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsCoverView { get; set; } = true;
+
     public ICommand ToggleFavoritoCommand { get; }
+    public ICommand ToggleViewCommand { get; }
 
     public MainViewModel()
     {
         _historiaService = new HistoriaService();
         _favoritosService = FavoritosService.Instance;
         ToggleFavoritoCommand = new RelayCommand<Historia?>(ToggleFavorito);
+        ToggleViewCommand = new RelayCommand(ToggleView);
         CargarHistorias();
     }
 
@@ -45,6 +50,11 @@ public partial class MainViewModel : ObservableObject
         {
             Historias[index] = historia; // Actualiza la UI
         }
+    }
+
+    private void ToggleView()
+    {
+        IsCoverView = !IsCoverView;
     }
 
     // Refresca el estado de favoritos cuando se vuelve a la página

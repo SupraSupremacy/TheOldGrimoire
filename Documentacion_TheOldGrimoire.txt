@@ -1,0 +1,887 @@
+================================================================================
+              DOCUMENTACION TECNICA - THE OLD GRIMOIRE
+                    Aplicacion .NET MAUI
+================================================================================
+
+Indice
+------
+  1. Descripcion general del proyecto
+  2. Arquitectura y patron MVVM
+  3. Estructura de carpetas
+  4. Punto de entrada (MauiProgram.cs)
+  5. Modelos de datos (Models/)
+  6. Servicios (Services/)
+  7. Vistas y navegacion (Views/ + AppShell)
+  8. ViewModels
+  9. Converters y Helpers
+  10. Sistema de temas y estilos
+  11. Configuracion de la plataforma (.csproj)
+  12. Paquetes NuGet utilizados
+  13. Diagrama de navegacion
+  14. Flujo de datos general
+
+
+================================================================================
+1. DESCRIPCION GENERAL DEL PROYECTO
+================================================================================
+
+TheOldGrimoire es una aplicacion movil y de escritorio desarrollada en .NET MAUI
+cuyo proposito es servir como una biblioteca de historias de terror.
+
+La app permite:
+  - Explorar una biblioteca de historias de terror (con portada, sinopsis y texto
+    completo).
+  - Marcar historias como favoritas.
+  - Leer historias con tamaño de fuente configurable.
+  - Enviar sugerencias de historias a la comunidad.
+  - Ver las sugerencias de otros usuarios, votarlas y comentarlas.
+  - Personalizar la apariencia: tema oscuro/claro, color de acento, tipo de fuente
+    y tamano de fuente.
+  - Cerrar sesion (resetea la configuracion a los valores por defecto).
+
+Plataformas objetivo: Android y Windows.
+Framework: .NET 10.0 (net10.0).
+
+
+================================================================================
+2. ARQUITECTURA Y PATRON MVVM
+================================================================================
+
+El proyecto sigue el patron MVVM (Model-View-ViewModel) usando la libreria
+CommunityToolkit.Mvvm en su version 8.4.2.
+
+Resumen de capas:
+
+  +------------------+     +------------------+     +------------------+
+  |                  |     |                  |     |                  |
+  |     MODELS       |<----|    VIEWMODELS    |<----|      VIEWS       |
+  |  (Datos puros)   |     | (Logica + state) |     |  (UI / XAML)     |
+  |                  |     |                  |     |                  |
+  +------------------+     +------------------+     +------------------+
+                                   |                       |
+                                   v                       v
+                           +------------------+    +------------------+
+                           |    SERVICES      |    |   CONVERTERS     |
+                           | (Negocio/Datos)  |    | (Transformaciones|
+                           +------------------+    +------------------+
+
+Convenciones clave del proyecto:
+
+  - Los ViewModels heredan de ObservableObject (del CommunityToolkit).
+  - Las propiedades que notifican cambios a la UI usan el atributo
+    [ObservableProperty] con propiedades "partial" (estilo source-generator).
+  - Los comandos (ICommand) se crean manualmente en los constructores usando
+    RelayCommand y RelayCommand<T> (NO se usan atributos [RelayCommand]).
+  - Cada pagina (ContentPage) instancia su propio ViewModel en el constructor
+    del code-behind y lo asigna al BindingContext. NO hay inyeccion de
+    dependencias para ViewModels ni ViewModelLocator.
+  - Las vistas usan bindings compilados (x:DataType) para mayor rendimiento.
+
+
+================================================================================
+3. ESTRUCTURA DE CARPETAS
+================================================================================
+
+TheOldGrimoire/
+  |-- Converters/
+  |     IsNullOrEmptyConverter.cs        (1 converter)
+  |
+  |-- Helpers/
+  |     FavoritoColorConverter.cs        (converter: color de estrella)
+  |     FavoritoIconConverter.cs         (converter: icono de estrella)
+  |     HexColorConverter.cs             (converter: string hex a Color)
+  |     InvertBoolConverter.cs           (converter: invierte booleano)
+  |     MensajeColorConverter.cs         (converter: exito/error a color)
+  |     VoteConverter.cs                (2 converters: voto+ y voto-)
+  |
+  |-- Models/
+  |     Comentario.cs                    (modelo de comentario)
+  |     Historia.cs                      (modelo de historia)
+  |     Sugerencia.cs                    (modelo de sugerencia, ObservableObject)
+  |
+  |-- Services/
+  |     ComunidadService.cs              (sugerencias, votos, comentarios)
+  |     ConfiguracionService.cs          (preferencias de usuario)
+  |     FavoritosService.cs              (gestion de favoritos)
+  |     HistoriaService.cs               (catalogo de historias)
+  |
+  |-- ViewModels/
+  |     ComunidadViewModel.cs            (feed de comunidad)
+  |     DetailViewModel.cs               (lector de historia)
+  |     FavoritesViewModel.cs            (lista de favoritos)
+  |     MainViewModel.cs                 (biblioteca principal)
+  |     SettingsViewModel.cs             (configuracion)
+  |     SuggestionsViewModel.cs          (formulario de sugerencia)
+  |     SugerenciaDetailViewModel.cs     (detalle de sugerencia)
+  |
+  |-- Views/
+  |     App.xaml / App.xaml.cs           (Application, recursos globales)
+  |     AppShell.xaml / AppShell.xaml.cs (Shell, navegacion flyout)
+  |     MainPage.xaml / .cs              (biblioteca)
+  |     DetailPage.xaml / .cs            (lector de historia)
+  |     FavoritesPage.xaml / .cs         (favoritos)
+  |     ComunidadPage.xaml / .cs         (feed de comunidad)
+  |     SuggestionsPage.xaml / .cs       (enviar sugerencia)
+  |     SugerenciaDetailPage.xaml / .cs  (detalle de sugerencia)
+  |     SettingsPage.xaml / .cs          (configuracion)
+  |
+  |-- Resources/
+  |     Styles/
+  |       Colors.xaml / Colors.xaml.cs      (tema oscuro por defecto)
+  |       ColorsLight.xaml / .cs            (tema claro)
+  |       Styles.xaml                       (estilos implicitos globales)
+  |     Images/                             (portadas de historias)
+  |     Fonts/                              (OpenSans Regular y Semibold)
+  |     AppIcon/                            (icono de la app)
+  |     Splash/                             (pantalla de splash)
+  |
+  |-- Platforms/                           (boilerplate por plataforma)
+  |-- MauiProgram.cs                       (constructor de la app)
+  |-- TheOldGrimoire.csproj                (proyecto .NET MAUI)
+
+
+================================================================================
+4. PUNTO DE ENTRADA: MauiProgram.cs
+================================================================================
+
+MauiProgram.cs es el punto de configuracion de la aplicacion. En este proyecto
+es bastante sencillo:
+
+  public static MauiApp CreateMauiApp()
+  {
+      var builder = MauiApp.CreateBuilder();
+      builder
+          .UseMauiApp<App>()
+          .ConfigureFonts(fonts =>
+          {
+              fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+              fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+          });
+
+      #if DEBUG
+          builder.Logging.AddDebug();
+      #endif
+
+      return builder.Build();
+  }
+
+Puntos importantes:
+
+  - Se registra la clase App como la aplicacion MAUI.
+  - Se registran dos fuentes tipograficas personalizadas.
+  - NO se registra NINGUN servicio en el contenedor de inyeccion de
+    dependencias (IServiceCollection). Los servicios se obtienen de otras
+    maneras (ver seccion 6).
+  - En modo DEBUG se anade logging de depuracion.
+
+
+================================================================================
+5. MODELOS DE DATOS (Models/)
+================================================================================
+
+El proyecto define 3 modelos en la carpeta Models/:
+
+5.1 Historia.cs (POCO simple)
+--------------------------
+Representa una historia de terror completa.
+
+  public class Historia
+  {
+      public int Id          { get; set; }
+      public string Titulo   { get; set; }
+      public string Autor    { get; set; }
+      public string Genero   { get; set; }   // "Terror Gótico", "Terror Cósmico", etc.
+      public string Sinopsis { get; set; }   // Resumen corto
+      public string Contenido{ get; set; }   // Texto completo de la historia
+      public string Etiqueta { get; set; }   // "Clasico", "Ciencia Ficcion", etc.
+      public string ImagenUrl{ get; set; }   // Nombre del archivo de imagen
+      public bool EsFavorito { get; set; }   // Estado de favorito (mutado por FavoritosService)
+  }
+
+Es un POCO (Plain Old CLR Object) sin herencia especial. No notifica cambios
+a la UI; la notificacion se maneja reemplazando el objeto en la coleccion.
+
+
+5.2 Sugerencia.cs (ObservableObject)
+------------------------------------
+Representa una sugerencia de historia enviada por un usuario de la comunidad.
+A diferencia de Historia, hereda de ObservableObject y usa [ObservableProperty]
+para que los cambios se notifiquen automaticamente a la UI.
+
+  public partial class Sugerencia : ObservableObject
+  {
+      [ObservableProperty] public partial int Id { get; set; }
+      [ObservableProperty] public partial string NombreUsuario { get; set; }
+      [ObservableProperty] public partial string Titulo { get; set; }
+      [ObservableProperty] public partial string Autor { get; set; }
+      [ObservableProperty] public partial string Genero { get; set; }
+      [ObservableProperty] public partial string Descripcion { get; set; }
+      [ObservableProperty] public partial DateTime FechaPublicacion { get; set; }
+      [ObservableProperty] public partial int VotosNetos { get; set; }
+      [ObservableProperty] public partial bool UsuarioVotoArriba { get; set; }
+      [ObservableProperty] public partial bool UsuarioVotoAbajo { get; set; }
+      [ObservableProperty] public partial ObservableCollection<Comentario> Comentarios { get; set; }
+
+      public int TotalComentarios => Comentarios?.Count ?? 0;
+      public string TiempoRelativo => CalcularTiempoRelativo();
+  }
+
+Caracteristicas destacadas:
+  - La propiedad computada "TiempoRelativo" calcula el tiempo transcurrido
+    desde la publicacion ("hace 3 horas", "hace 1 dia", "10 de marzo de 2025").
+  - Cuando cambia FechaPublicacion, se dispara OnPropertyChanged para
+    actualizar TiempoRelativo en la UI.
+  - Cuando cambia Comentarios, se dispara OnPropertyChanged para
+    actualizar TotalComentarios.
+  - El metodo NotificarComentariosCambiados() permite notificar manualmente
+    cambios en la lista de comentarios.
+
+
+5.3 Comentario.cs (POCO simple)
+------------------------------
+Representa un comentario dentro de una sugerencia.
+
+  public class Comentario
+  {
+      public int Id              { get; set; }
+      public int SugerenciaId    { get; set; }
+      public string NombreUsuario{ get; set; }
+      public string Texto        { get; set; }
+      public DateTime FechaPublicacion { get; set; }
+
+      public string TiempoRelativo => CalcularTiempoRelativo();
+  }
+
+Incluye su propia implementacion de CalcularTiempoRelativo() similar a la de
+Sugerencia, con soporte para meses en espanol.
+
+
+================================================================================
+6. SERVICIOS (Services/)
+================================================================================
+
+Los servicios encapsulan la logica de negocio y acceso a datos. NO se usan
+inyeccion de dependencias; se obtienen por dos mecanismos:
+
+  a) Singletons perezosos (Lazy<T>) via propiedad estatica "Instance":
+     - FavoritosService
+     - ConfiguracionService
+
+  b) Instanciacion directa con "new" en los constructores de ViewModels:
+     - HistoriaService
+     - ComunidadService (usa campos estaticos internos, por lo que su
+       estado persiste aunque se creen nuevas instancias)
+
+
+6.1 HistoriaService.cs - Catalogo de historias
+----------------------------------------------
+Devuelve una coleccion con 3 historias de terror hardcodeadas:
+
+  1. "La Mascarara de la Muerte Roja" - Edgar Allan Poe (Terror Gotic)
+  2. "No Tengo Boca y Debo Gritar" - Harlan Ellison (Terror Cosmico)
+  3. "Signalis" - rose-engine (Terror Cosmico)
+
+Cada historia tiene titulo, autor, genero, sinopsis, contenido completo,
+etiqueta y URL de imagen. Es un servicio simple sin persistencia.
+
+
+6.2 FavoritosService.cs - Gestion de favoritos (Singleton)
+----------------------------------------------------------
+Patron Singleton usando Lazy<T>:
+
+  private static readonly Lazy<FavoritosService> _instance =
+      new Lazy<FavoritosService>(() => new FavoritosService());
+  public static FavoritosService Instance => _instance.Value;
+
+Mantiene una coleccion en memoria (ObservableCollection<Historia>) de
+historias marcadas como favoritas. Metodos principales:
+
+  - ObtenerTodasLasHistorias():
+      Devuelve todas las historias del HistoriaService, marcando con
+      EsFavorito=true las que estan en la lista de favoritos.
+      NOTA: Cada llamada crea una NUEVA ObservableCollection (copia).
+
+  - AlternarFavorito(Historia):
+      Cambia el estado EsFavorito de la historia y la agrega/elimina
+      de la coleccion interna de favoritos.
+
+  - ObtenerFavoritos():
+      Devuelve una copia de la coleccion de favoritos.
+
+  - EsFavorito(int historiaId):
+      Verifica si una historia esta en favoritos.
+
+Los datos se mantienen en memoria; al cerrar la app se pierden.
+Hay un comentario indicando que en el futuro se usara SQLite.
+
+
+6.3 ConfiguracionService.cs - Preferencias (Singleton)
+------------------------------------------------------
+Patron Singleton similar a FavoritosService. Usa la API Preferences de
+.NET MAUI para persistir configuraciones en el dispositivo.
+
+Propiedades persistentes:
+  - TemaOscuro (bool, default: true)
+  - TamanoFuente (int: 1=Pequeno/12pt, 2=Normal/16pt, 3=Grande/20pt,
+    4=Muy Grande/24pt)
+  - TipoFuente (string, default: "Times New Roman")
+  - ColorAcento (string hexadecimal, default: "#d4af37" - dorado)
+
+Metodos/utilidades:
+  - ObtenerTamanoFuente(): Convierte el entero TamanoFuente a puntos reales
+    usando un switch expression.
+  - ColoresAcentoDisponibles: Lista de 6 colores (dorado, rojo sangre,
+    purpura oscuro, verde oscuro, gris pizarra, marron).
+  - FuentesDisponibles: Lista de 6 fuentes (Times New Roman, Georgia,
+    Garamond, Arial, Verdana, Courier New).
+
+
+6.4 ComunidadService.cs - Gestor de comunidad
+----------------------------------------------
+Es la clase mas compleja del proyecto. No es singleton tradicional pero
+mantiene estado en campos ESTATICOS, lo que permite que los datos
+sobrevivan a multiples instancias de la clase.
+
+Campos estaticos:
+  - _sugerencias: ObservableCollection<Sugerencia> (todas las sugerencias)
+  - _siguienteIdSugerencia: int (autoincremental)
+  - _siguienteIdComentario: int (autoincremental)
+
+Datos de prueba: Carga 3 sugerencias de ejemplo al iniciar:
+  1. "El Rey de Amarillo" (47 votos, 2 comentarios)
+  2. "La Loteria" (89 votos, 0 comentarios)
+  3. "El Horla" (23 votos, 0 comentarios)
+
+Metodos principales:
+  - ObtenerSugerencias(OrdenSugerencias): Devuelve sugerencias ordenadas
+    por votos (mayor/menor) o por fecha (reciente/antigua).
+  - AgregarSugerencia(Sugerencia): Inserta una nueva sugerencia arriba
+    de la lista con ID autoincremental y fecha actual.
+  - VotarArriba(Sugerencia): Alterna el voto positivo. Si ya voto abajo,
+    lo cambia. Implementa logica de toggle (si ya voto arriba, quita el voto).
+  - VotarAbajo(Sugerencia): Logica inversa a VotarArriba.
+  - AgregarComentario(int sugerenciaId, Comentario): Agrega un comentario
+    a la sugerencia indicada.
+
+El archivo tambien define el enum:
+
+  public enum OrdenSugerencias
+  {
+      MayorVotos,
+      MenorVotos,
+      MasRecientes,
+      MasAntiguas
+  }
+
+
+================================================================================
+7. VISTAS Y NAVEGACION (Views/ + AppShell)
+================================================================================
+
+7.1 App.xaml - Recursos globales de la aplicacion
+-------------------------------------------------
+Registra en el nivel de Application:
+  - Diccionarios de colores fusionados (Colors.xaml para tema oscuro)
+  - Estilos globales (Styles.xaml)
+  - 8 converters como StaticResource para uso en toda la app
+  - La fuente por defecto "Times New Roman" como recurso String
+
+Todos los converters se registran aqui para que esten disponibles en
+cualquier pagina sin necesidad de re-declararlos.
+
+
+7.2 App.xaml.cs - Logica de la aplicacion
+------------------------------------------
+Clase App hereda de Application. Responsabilidades:
+
+  a) Constructor:
+     - Inicializa componentes.
+     - Busca el diccionario de colores actual.
+     - Aplica el tema guardado (oscuro/claro) desde Preferences.
+     - Aplica la configuracion guardada (color de acento, tipo de fuente).
+
+  b) AplicarTema(bool oscuro):
+     - Cambia UserAppTheme entre Dark y Light.
+     - Intercambia los ResourceDictionary de Colors (oscuro) por
+       ColorsLight (claro) en MergedDictionaries.
+     - Evita el cambio si el tema solicitado ya esta activo.
+
+  c) AplicarConfiguracionGuardada():
+     - Lee de Preferences el color de acento y tipo de fuente.
+     - Los aplica al ResourceDictionary global.
+
+  d) CreateWindow():
+     - Crea la ventana con AppShell.
+     - En Windows: registra un handler para customizar la barra de
+       titulo con colores que coinciden con el tema oscuro.
+
+  e) Acceso publico desde SettingsViewModel:
+     - AplicarTema(bool) y la mutacion de Resources["Primary"] y
+       Resources["FontFamily"] se llaman desde SettingsViewModel
+       para cambios en tiempo real.
+
+
+7.3 AppShell.xaml - Navegacion principal
+----------------------------------------
+Define la navegacion tipo Flyout (menu lateral) con 5 secciones:
+
+  1. "Biblioteca"   -> MainPage          (route: MainPage)
+  2. "Sugerencias"  -> SuggestionsPage   (route: SuggestionsPage)
+  3. "Comunidad"    -> ComunidadPage     (route: ComunidadPage)
+  4. "Favoritos"    -> FavoritesPage     (route: FavoritesPage)
+  5. "Configuracion"-> SettingsPage      (route: SettingsPage)
+
+El flyout tiene un header personalizado con el nombre de la app y un
+separador decorativo.
+
+Todos los estilos del flyout usan DynamicResource para que respondan
+a cambios de tema en tiempo real.
+
+
+7.4 AppShell.xaml.cs - Rutas registradas
+-----------------------------------------
+Registra dos rutas de navegacion por push (apilar sobre la pagina actual):
+
+  Routing.RegisterRoute(nameof(DetailPage), typeof(DetailPage));
+  Routing.RegisterRoute(nameof(SugerenciaDetailPage), typeof(SugerenciaDetailPage));
+
+Estas paginas no son FlyoutItems; se navega a ellas con GoToAsync()
+pasando parametros de tipo Dictionary<string, object>.
+
+
+7.5 Paginas principales
+------------------------
+
+a) MainPage.xaml (Biblioteca):
+   - Muestra un CollectionView con todas las historias.
+   - Cada item tiene: imagen/portada, titulo, autor, genero, etiqueta,
+     boton de favorito (estrella) y flecha de navegacion.
+   - Al seleccionar un item, navega a DetailPage pasando el objeto Historia.
+   - El boton de favorito llama a ToggleFavoritoCommand del ViewModel.
+   - OnAppearing() refresca los estados de favorito.
+
+b) DetailPage.xaml (Lector):
+   - Muestra titulo, autor, genero, sinopsis y contenido completo.
+   - El tamano de la fuente del contenido se obtiene de
+     ConfiguracionService.ObtenerTamanoFuente().
+   - El titulo de la pagina se trunca a 20 caracteres en OnNavigatedTo().
+
+c) FavoritesPage.xaml (Favoritos):
+   - Similar a MainPage pero solo muestra historias marcadas como favoritas.
+   - Si no hay favoritos, muestra un estado vacio con boton para ir
+     a la Biblioteca usando ruta absoluta: "//MainPage".
+
+d) ComunidadPage.xaml (Feed de comunidad):
+   - Header con titulo, filtro por genero (Picker) y boton "Crear".
+   - Lista de sugerencias como cards (Border con RoundRectangle).
+   - Cada card muestra: votos (+/-), usuario, titulo, autor, genero,
+     descripcion, boton de comentar y conteo de comentarios.
+   - Los botones de voto usan RelativeSource para encontrar el command
+     en el ViewModel padre (ComunidadViewModel).
+
+e) SuggestionsPage.xaml (Formulario):
+   - Formulario con Entry (nombre, titulo, autor), Picker (genero) y
+     Editor (descripcion).
+   - Botones: "Enviar Sugerencia" y "Limpiar".
+   - Muestra mensajes de exito/error durante 5 segundos.
+   - Validacion: nombre, titulo, genero y descripcion son obligatorios.
+
+f) SugerenciaDetailPage.xaml (Detalle de sugerencia):
+   - Muestra la sugerencia completa con sistema de votacion inline.
+   - Lista de comentarios con CollectionView.
+   - Campo de entrada para agregar comentarios.
+   - NOTA: Usa colores hardcodeados (#1a1a1a, #d4af37, etc.) en vez
+     de DynamicResource, por lo que NO responde a cambios de tema.
+
+g) SettingsPage.xaml (Configuracion):
+   - Seccion "Apariencia": Switch para tema oscuro, Picker de color
+     de acento con preview (BoxView), Picker de tamano de fuente,
+     Picker de tipo de fuente con vista previa.
+   - Seccion "Lectura": tamano y tipo de fuente.
+   - Boton "Guardar configuracion".
+   - Seccion "Cuenta": boton "Cerrar sesion".
+   - Seccion "Acerca de": version 1.0.0 y lista de desarrolladores.
+
+
+================================================================================
+8. VIEWMODELS
+================================================================================
+
+Todos los ViewModels heredan de ObservableObject (CommunityToolkit.Mvvm).
+Usan [ObservableProperty] con propiedades partial para generacion de codigo.
+Los comandos se crean manualmente con RelayCommand/RelayCommand<T>.
+
+8.1 MainViewModel
+-----------------
+Propiedades:
+  - Historias: ObservableCollection<Historia> (todas las historias)
+  - IsRefreshing: bool (para pull-to-refresh, aunque no esta habilitado)
+
+Comandos:
+  - ToggleFavoritoCommand: RelayCommand<Historia?> - alterna el favorito
+    y reemplaza el objeto en la coleccion para notificar a la UI.
+
+Metodos:
+  - CargarHistorias(): obtiene historias del FavoritosService.
+  - Refrescar(): recarga la lista (llamado desde OnAppearing de MainPage).
+
+
+8.2 DetailViewModel
+-------------------
+Propiedades:
+  - Historia: Historia? (recibida via QueryProperty desde la navegacion)
+  - TamanioLetra: double (computada, obtiene tamano de fuente de
+    ConfiguracionService)
+
+Recibe parametros de navegacion con [QueryProperty(nameof(Historia), "Historia")].
+Esto permite que Shell inyecte automaticamente el objeto Historia cuando
+se navega a DetailPage con GoToAsync.
+
+
+8.3 FavoritesViewModel
+----------------------
+Propiedades:
+  - Favoritos: ObservableCollection<Historia>
+  - HayFavoritos: bool (controla la visibilidad del estado vacio)
+
+Comandos:
+  - IrABibliotecaCommand: navega a "//MainPage" (ruta absoluta).
+  - ToggleFavoritoCommand: alterna favorito y refresca la lista.
+
+
+8.4 SuggestionsViewModel
+------------------------
+Propiedades (todas observables, enlazadas al formulario):
+  - NombreUsuario, TituloHistoria, Autor, GeneroSeleccionado, Descripcion
+  - Mensaje, MensajeVisible, MensajeEsExito (para feedback)
+  - EstaOcupado: bool (para indicador de carga)
+
+Comandos:
+  - GuardarCommand: valida campos, crea objeto Sugerencia, lo agrega
+    al ComunidadService, muestra mensaje de exito y limpia el formulario.
+  - LimpiarCommand: resetea todos los campos del formulario.
+
+
+8.5 SugerenciaDetailViewModel
+------------------------------
+Recibe la Sugerencia via [QueryProperty].
+
+Propiedades:
+  - Sugerencia: Sugerencia?
+  - NuevoComentario: string (campo de entrada para comentarios)
+
+Comandos:
+  - VotarArribaCommand / VotarAbajoCommand: delegan al ComunidadService.
+  - EnviarComentarioCommand: valida que no este vacio, crea Comentario
+    con el nombre del usuario de la sugerencia, lo agrega y limpia
+    el campo.
+
+
+8.6 ComunidadViewModel
+----------------------
+El ViewModel mas complejo. Gestiona el feed de comunidad.
+
+Propiedades:
+  - Sugerencias: ObservableCollection<Sugerencia>
+  - OpcionesFiltro: ObservableCollection<string> (generos disponibles)
+  - FiltroSeleccionado: int (indice del filtro)
+
+Comandos:
+  - VotarArribaCommand / VotarAbajoCommand: se bindean desde los items
+    del CollectionView usando RelativeSource.
+  - ComentarCommand: navega al detalle de la sugerencia.
+  - VerDetalleCommand: navega al detalle de la sugerencia.
+  - IrASugerenciasCommand: navega a la pagina de sugerencias.
+
+Metodo Refrescar(): recarga las sugerencias segun el filtro seleccionado.
+
+
+8.7 SettingsViewModel
+---------------------
+Propiedades observables enlazadas a los controles de configuracion:
+  - TemaOscuro, TamanoFuenteSeleccionado, TipoFuenteSeleccionado,
+    ColorAcentoSeleccionado
+  - Mensaje, MensajeVisible, MensajeEsExito
+
+Colecciones:
+  - OpcionesFuente, OpcionesAcento, OpcionesTamanoFuente
+
+Comandos:
+  - GuardarConfiguracionCommand: guarda en ConfiguracionService y aplica
+    cambios globales via App.AplicarTema() y mutacion de Resources.
+  - CerrarSesionCommand: confirma con DisplayAlertAsync, limpia
+    Preferences y resetea valores por defecto.
+  - VerAcercaDeCommand: muestra alerta con info de la app y autores.
+
+Caracteristica destacada: el hook partial void OnTemaOscuroChanged(bool)
+se ejecuta automaticamente cuando cambia TemaOscuro, aplicando el tema
+en tiempo real sin necesidad de presionar "Guardar".
+
+
+================================================================================
+9. CONVERTERS Y HELPERS
+================================================================================
+
+Los converters transforman datos de los modelos/ViewModels en valores
+apropiados para la UI. Estan registrados en App.xaml como StaticResource.
+
+9.1 IsNullOrEmptyConverter (Converters/)
+----------------------------------------
+Convierte un string a booleano indicando si es null o vacio.
+Acepta un parametro "true" que invierte el resultado.
+Uso: Mostrar imagen si la URL existe, o un placeholder si no.
+
+9.2 FavoritoIconConverter (Helpers/)
+------------------------------------
+Convierte bool (EsFavorito) a string:
+  true  -> "★" (estrella llena)
+  false -> "☆" (estrella vacia)
+
+9.3 FavoritoColorConverter (Helpers/)
+-------------------------------------
+Convierte bool (EsFavorito) a Color:
+  true  -> Colors.Gold (dorado)
+  false -> Colors.Gray
+
+9.4 InvertBoolConverter (Helpers/)
+----------------------------------
+Invierte un valor booleano. Se usa en FavoritesPage para mostrar el
+estado vacio cuando HayFavoritos es false.
+
+9.5 MensajeColorConverter (Helpers/)
+------------------------------------
+Convierte bool (MensajeEsExito) a Color:
+  true  -> Colors.Green (mensaje de exito)
+  false -> Colors.Red (mensaje de error)
+
+9.6 VotoColorConverter (Helpers/ - VoteConverter.cs)
+----------------------------------------------------
+Convierte bool (UsuarioVotoArriba) a Color:
+  true  -> "#ff6b35" (naranja activo)
+  false -> "#8a7a7a" (gris inactivo)
+
+9.7 VotoNegativoColorConverter (Helpers/ - VoteConverter.cs)
+------------------------------------------------------------
+Convierte bool (UsuarioVotoAbajo) a Color:
+  true  -> "#4da6ff" (azul activo)
+  false -> "#8a7a7a" (gris inactivo)
+
+9.8 HexColorConverter (Helpers/)
+--------------------------------
+Convierte un string hexadecimal (ej: "#d4af37") a un objeto Color de MAUI.
+Este es el UNICO converter que implementa ConvertBack (para TwoWay binding).
+
+
+================================================================================
+10. SISTEMA DE TEMAS Y ESTILOS
+================================================================================
+
+10.1 Diccionarios de colores
+-----------------------------
+El proyecto define dos ResourceDictionary con las mismas claves pero
+valores diferentes:
+
+  Colors.xaml (tema oscuro - por defecto):
+    - Background:  #1a1a1a (negro muy oscuro)
+    - Surface:     #2d2d2d (gris oscuro)
+    - Primary:     #d4af37 (dorado)
+    - OnBackground:#f0e6d3 (crema claro)
+
+  ColorsLight.xaml (tema claro):
+    - Background:  #f5f0e8 (crema claro)
+    - Surface:     #ffffff (blanco)
+    - Primary:     #b8962e (dorado oscuro)
+    - OnBackground:#1f1a14 (marron oscuro)
+
+Claves compartidas: Primary, Background, Surface, SurfaceAlt, OnBackground,
+OnSurface, Muted, OnPrimaryButton, Destructive, TagBackground,
+InputBackground, DetailBody, DetailMuted, FlyoutItemBackground, PrimaryDark.
+
+
+10.2 Cambio de tema en tiempo real
+----------------------------------
+El flujo es:
+  1. El usuario cambia el Switch "Tema oscuro" en SettingsPage.
+  2. SettingsViewModel.OnTemaOscuroChanged() se dispara automaticamente.
+  3. Se llama a App.AplicarTema(bool).
+  4. App intercambia Colors.xaml por ColorsLight.xaml (o viceversa) en
+     MergedDictionaries.
+  5. Como todas las vistas usan DynamicResource, la UI se actualiza
+     instantaneamente.
+
+
+10.3 Cambio de color de acento y fuente
+----------------------------------------
+  1. El usuario selecciona un color/fuente y presiona "Guardar".
+  2. SettingsViewModel.GuardarConfiguracion() guarda en ConfiguracionService
+     (Preferences) y llama a AplicarCambiosGlobales().
+  3. AplicarCambiosGlobales() muta:
+     - App.Resources["Primary"] = Color.FromArgb(hex)
+     - App.Resources["FontFamily"] = tipoFuente
+  4. Como los estilos de Styles.xaml usan DynamicResource para Primary
+     y FontFamily, toda la app se actualiza.
+
+
+10.4 Estilos globales (Styles.xaml)
+------------------------------------
+Define estilos implicitos para:
+  - Label: TextColor = {DynamicResource OnBackground}, FontFamily = {DynamicResource FontFamily}
+  - Button: TextColor = OnPrimaryButton, BackgroundColor = Primary, CornerRadius = 8
+  - CollectionView: BackgroundColor = Background
+
+
+================================================================================
+11. CONFIGURACION DE LA PLATAFORMA (.csproj)
+================================================================================
+
+El archivo TheOldGrimoire.csproj define:
+
+  - TargetFrameworks:
+      net10.0-android (siempre)
+      net10.0-ios (excepto en Linux)
+      net10.0-maccatalyst (excepto en Linux)
+      net10.0-windows10.0.19041.0 (solo en Windows)
+
+  - OutputType: Exe
+  - UseMaui: true
+  - SingleProject: true (un solo proyecto para todas las plataformas)
+  - Nullable: enable (habilita nullable reference types)
+  - ImplicitUsings: enable
+  - MauiXamlInflator: SourceGen (compilacion de XAML por source generators)
+
+  - WindowsPackageType: None (empaquetado como app desktop, no Store)
+
+  - Plataformas minimas soportadas:
+      iOS/MacCatalyst: 15.0
+      Android: 21.0
+      Windows: 10.0.17763.0
+
+  - Recursos embebidos:
+      MauiIcon: appicon.svg + appiconfg.svg
+      MauiSplashScreen: splash.svg
+      MauiImage: todas las imagenes de Resources/Images/
+      MauiFont: todas las fuentes de Resources/Fonts/
+
+  - ItemGroup adicional para compilar XAML de las paginas con
+    MSBuild:Compile (necesario para todas las paginas creadas).
+
+
+================================================================================
+12. PAQUETES NUGET UTILIZADOS
+================================================================================
+
+  1. CommunityToolkit.Mvvm 8.4.2
+     - ObservableObject: base para ViewModels con notificacion de cambios.
+     - [ObservableProperty]: genera propiedades con notificacion automatica.
+     - RelayCommand / RelayCommand<T>: implementacion de ICommand.
+
+  2. Microsoft.Maui.Controls (version via MauiVersion)
+     - Framework principal de .NET MAUI para controles, navegacion Shell,
+       Shell routing, etc.
+
+  3. Microsoft.Extensions.Logging.Debug 10.0.0
+     - Logging en modo DEBUG para depuracion.
+
+
+================================================================================
+13. DIAGRAMA DE NAVEGACION
+================================================================================
+
+                    AppShell (Flyout Menu)
+                    =====================
+                           |
+           +-------+-------+-------+-------+
+           |       |       |       |       |
+        Biblioteca|  Comunidad |  Config  |
+        (MainPage)|  Sugerencias|         |
+                   |  Favoritos |
+           |       |       |       |
+           v       |       v       v
+      DetailPage   |   SugerenciaDetailPage
+    (lector)       |   (detalle sugerencia)
+                   |
+           +-------+
+           |
+        MainPage/FavoritesPage
+           |
+           v (seleccion de historia)
+        DetailPage
+        (con parametro Historia)
+
+
+Rutas absolutas usadas:
+  - "//MainPage" : desde FavoritesPage (boton "Ir a la Biblioteca")
+
+Rutas registradas (push navigation):
+  - DetailPage : recibe {"Historia": Historia}
+  - SugerenciaDetailPage : recibe {"Sugerencia": Sugerencia}
+
+Parametros de navegacion pasados como Dictionary<string, object>:
+  Shell.Current.GoToAsync(nameof(DetailPage), new Dictionary<string, object>
+  {
+      { "Historia", historia }
+  });
+
+Los ViewModels objetivo usan [QueryProperty] para recibir estos datos:
+  [QueryProperty(nameof(Historia), "Historia")]
+  public partial class DetailViewModel : ObservableObject { ... }
+
+
+================================================================================
+14. FLUJO DE DATOS GENERAL
+================================================================================
+
+Ejemplo completo: El usuario marca una historia como favorita
+
+  1. MainPage carga -> MainPage.constructor():
+     - Crea new MainViewModel()
+     - MainViewModel.constructor() llama a CargarHistorias()
+       que obtiene todas las historias de FavoritosService
+     - La CollectionView se bindea a Historias
+
+  2. El usuario toca la estrella de una historia:
+     - El Button en XAML ejecuta ToggleFavoritoCommand
+       con CommandParameter = el objeto Historia
+     - MainViewModel.ToggleFavorito(Historia) se ejecuta
+     - FavoritosService.AlternarFavorito() cambia EsFavorito
+       y agrega/elimina de la coleccion interna
+     - Se reemplaza el objeto en Historias[index] para forzar
+       la notificacion a la UI
+     - La estrella cambia de icono y color via converters
+
+  3. El usuario selecciona una historia:
+     - SelectionChanged dispara OnHistoriaSeleccionada()
+     - Navega a DetailPage con GoToAsync pasando la Historia
+     - DetailViewModel recibe Historia via [QueryProperty]
+     - DetailPage muestra titulo, sinopsis y contenido
+     - El tamano de fuente del contenido se obtiene de
+       ConfiguracionService.ObtenerTamanoFuente()
+
+  4. El usuario cambia la configuracion de fuente:
+     - SettingsPage bindea a SettingsViewModel
+     - Al cambiar el Picker, la propiedad observable se actualiza
+     - Al presionar "Guardar", se guarda en Preferences via
+       ConfiguracionService y se muta App.Resources["FontFamily"]
+     - Todos los Labels se actualizan porque usan DynamicResource
+
+
+================================================================================
+NOTAS FINALES
+================================================================================
+
+- El proyecto NO usa base de datos. Todos los datos son en memoria y se
+  pierden al cerrar la aplicacion (excepto la configuracion que usa
+  Preferences).
+
+- La inyeccion de dependencias no esta implementada. Los servicios se
+  obtienen via singleton Lazy<T> o instanciacion directa.
+
+- Los ViewModels se crean manualmente en cada code-behind de pagina,
+  sin usar ViewModelLocator ni el contenedor DI.
+
+- SugerenciaDetailPage usa colores hardcodeados en vez de DynamicResource,
+  por lo que no responde a cambios de tema oscuro/claro.
+
+================================================================================
+                          FIN DEL DOCUMENTO
+================================================================================

@@ -10,7 +10,7 @@
         <ResourceDictionary>
 
             <!-- ========================================== -->
-            <!-- 1. ARCHIVOS DE RECURSOS (los que ya tenías) -->
+            <!-- 1. ARCHIVOS DE RECURSOS                   opencode -->
             <!-- ========================================== -->
             <ResourceDictionary.MergedDictionaries>
                 <styles:Colors />
@@ -28,6 +28,7 @@
             <helpers:FavoritoIconConverter x:Key="FavoritoIconConverter" />
             <helpers:FavoritoColorConverter x:Key="FavoritoColorConverter" />
             <helpers:InvertBoolConverter x:Key="InvertBoolConverter" />
+            <helpers:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
 <helpers:MensajeColorConverter x:Key="MensajeColorConverter" />
             <helpers:VotoColorConverter x:Key="VotoColorConverter" />
             <helpers:VotoNegativoColorConverter x:Key="VotoNegativoColorConverter" />

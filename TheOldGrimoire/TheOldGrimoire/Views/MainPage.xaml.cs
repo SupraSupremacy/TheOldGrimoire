@@ -24,19 +24,32 @@ public partial class MainPage : ContentPage
         _viewModel.Refrescar();
     }
 
+    private async void OnCoverTapped(object? sender, TappedEventArgs e)
+    {
+        if ((sender as BindableObject)?.BindingContext is Historia historia)
+        {
+            await AbrirHistoriaAsync(historia);
+        }
+    }
+
     private async void OnHistoriaSeleccionada(object? sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is Historia historia)
         {
-            var navigationParameter = new Dictionary<string, object>
-            {
-                { "Historia", historia }
-            };
-
-            await Shell.Current.GoToAsync(nameof(DetailPage), navigationParameter);
+            await AbrirHistoriaAsync(historia);
 
             // Limpiar selección
             HistoriasCollection.SelectedItem = null;
         }
+    }
+
+    private static async Task AbrirHistoriaAsync(Historia historia)
+    {
+        var ruta = historia.TienePdf ? nameof(PdfViewerPage) : nameof(DetailPage);
+
+        await Shell.Current.GoToAsync(ruta, new Dictionary<string, object>
+        {
+            { "Historia", historia }
+        });
     }
 }

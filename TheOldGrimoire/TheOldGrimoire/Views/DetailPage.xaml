@@ -34,6 +34,13 @@
                        FontSize="16"/>
             </StackLayout>
 
+            <!-- Aviso para historias sin archivo PDF -->
+            <Label Text="📄 PDF no disponible"
+                   TextColor="{DynamicResource Muted}"
+                   FontSize="13"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding Historia.TienePdf, Converter={StaticResource InvertBoolConverter}}"/>
+
             <!-- Línea decorativa -->
             <BoxView HeightRequest="2"
                      Color="{DynamicResource Primary}"

@@ -9,6 +9,7 @@ public partial class AppShell : Shell
         InitializeComponent();
 
         Routing.RegisterRoute(nameof(DetailPage), typeof(DetailPage));
+        Routing.RegisterRoute(nameof(PdfViewerPage), typeof(PdfViewerPage));
         Routing.RegisterRoute(nameof(SugerenciaDetailPage), typeof(SugerenciaDetailPage));
     }
 }

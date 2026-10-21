@@ -8,90 +8,203 @@
              BackgroundColor="{DynamicResource Background}"
              Title="Biblioteca">
 
-    <CollectionView x:Name="HistoriasCollection"
-                    ItemsSource="{Binding Historias}"
-                    SelectionMode="Single"
-                    BackgroundColor="{DynamicResource Background}"
-                    Margin="10">
-<CollectionView.ItemTemplate>
-    <DataTemplate x:DataType="models:Historia">
-        <Grid Margin="0,8"
-              BackgroundColor="{DynamicResource Surface}"
-              Padding="10">
+    <Shell.TitleView>
+        <HorizontalStackLayout HorizontalOptions="End" VerticalOptions="Center" Margin="0,0,10,0" Spacing="4">
+            <Button Text="📋"
+                    FontSize="20"
+                    BackgroundColor="Transparent"
+                    Opacity="{Binding IsCoverView, Converter={StaticResource BoolToOpacityConverter}, ConverterParameter=invert}"
+                    TextColor="{DynamicResource OnBackground}"
+                    Command="{Binding ToggleViewCommand}"
+                    Padding="6"/>
+            <Button Text="🖼️"
+                    FontSize="20"
+                    BackgroundColor="Transparent"
+                    Opacity="{Binding IsCoverView, Converter={StaticResource BoolToOpacityConverter}}"
+                    TextColor="{DynamicResource OnBackground}"
+                    Command="{Binding ToggleViewCommand}"
+                    Padding="6"/>
+        </HorizontalStackLayout>
+    </Shell.TitleView>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="80"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+    <ContentPage.Resources>
+        <DataTemplate x:Key="HistoriaTemplate" x:DataType="models:Historia">
+                <Grid>
 
-            <!-- Imagen -->
-            <Grid Grid.Column="0"
-                  BackgroundColor="{DynamicResource SurfaceAlt}"
-                  HeightRequest="70"
-                  WidthRequest="70"
-                  Margin="0,0,10,0">
-                <Image Source="{Binding ImagenUrl}"
-                       Aspect="AspectFill"
-                       HeightRequest="60"
-                       WidthRequest="60"
-                       IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNullOrEmptyConverter}, ConverterParameter=true}"/>
-                <Label Text="📖"
-                       FontSize="30"
-                       HorizontalOptions="Center"
-                       VerticalOptions="Center"
-                       IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNullOrEmptyConverter}}"/>
-            </Grid>
+                <!-- ========== VISTA HORIZONTAL (tarjetas compactas) ========== -->
+                <Grid Margin="0,8"
+                      BackgroundColor="{DynamicResource Surface}"
+                      Padding="10"
+                      IsVisible="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MainViewModel}}, Path=IsCoverView, Converter={StaticResource InvertBoolConverter}}">
 
-            <!-- Contenido -->
-            <StackLayout Grid.Column="1"
-                         Padding="10,0">
-                <Label Text="{Binding Titulo}"
-                       TextColor="{DynamicResource OnBackground}"
-                       FontSize="18"
-                       FontAttributes="Bold"/>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <Label Text="{Binding Autor}"
-                       TextColor="{DynamicResource OnSurface}"
-                       FontSize="14"/>
+                    <!-- Imagen -->
+                    <Grid Grid.Column="0"
+                          BackgroundColor="{DynamicResource SurfaceAlt}"
+                          HeightRequest="70"
+                          WidthRequest="70"
+                          Margin="0,0,10,0">
+                        <Image Source="{Binding ImagenUrl}"
+                               Aspect="AspectFill"
+                               HeightRequest="60"
+                               WidthRequest="60"
+                               IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNullOrEmptyConverter}, ConverterParameter=true}"/>
+                        <Label Text="📖"
+                               FontSize="30"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNullOrEmptyConverter}}"/>
+                    </Grid>
 
-                <FlexLayout>
-                    <Label Text="{Binding Genero}"
-                           TextColor="{DynamicResource Primary}"
-                           FontSize="12"
-                           BackgroundColor="{DynamicResource TagBackground}"
-                           Padding="6,2"/>
-                    <Label Text="{Binding Etiqueta}"
-                           TextColor="{DynamicResource Muted}"
-                           FontSize="12"
-                           BackgroundColor="{DynamicResource Surface}"
-                           Padding="6,2"
-                           Margin="5,0"/>
-                </FlexLayout>
-            </StackLayout>
+                    <!-- Contenido -->
+                    <StackLayout Grid.Column="1"
+                                 Padding="10,0">
+                        <Label Text="{Binding Titulo}"
+                               TextColor="{DynamicResource OnBackground}"
+                               FontSize="18"
+                               FontAttributes="Bold"/>
 
-            <!-- ⭐ Botón de favorito + flecha -->
-            <StackLayout Grid.Column="2"
-                         Orientation="Horizontal"
-                         HorizontalOptions="End"
-                         VerticalOptions="Center"
-                         Spacing="0">
-                <Button x:Name="FavoritoButton"
-                        Text="{Binding EsFavorito, Converter={StaticResource FavoritoIconConverter}}"
-                        TextColor="{Binding EsFavorito, Converter={StaticResource FavoritoColorConverter}}"
-                        BackgroundColor="Transparent"
-                        FontSize="24"
-                        Padding="4,0"
-                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MainViewModel}}, Path=ToggleFavoritoCommand}"
-                        CommandParameter="{Binding .}"/>
-                <Label Text="→"
-                       TextColor="{DynamicResource Primary}"
-                       FontSize="20"
-                       VerticalOptions="Center"/>
-            </StackLayout>
-        </Grid>
-    </DataTemplate>
-</CollectionView.ItemTemplate>
-    </CollectionView>
+                        <Label Text="{Binding Autor}"
+                               TextColor="{DynamicResource OnSurface}"
+                               FontSize="14"/>
+
+                        <FlexLayout>
+                            <Label Text="{Binding Genero}"
+                                   TextColor="{DynamicResource Primary}"
+                                   FontSize="12"
+                                   BackgroundColor="{DynamicResource TagBackground}"
+                                   Padding="6,2"/>
+                            <Label Text="{Binding Etiqueta}"
+                                   TextColor="{DynamicResource Muted}"
+                                   FontSize="12"
+                                   BackgroundColor="{DynamicResource Surface}"
+                                   Padding="6,2"
+                                   Margin="5,0"/>
+                        </FlexLayout>
+                    </StackLayout>
+
+                    <!-- Botón de favorito + flecha -->
+                    <StackLayout Grid.Column="2"
+                                 Orientation="Horizontal"
+                                 HorizontalOptions="End"
+                                 VerticalOptions="Center"
+                                 Spacing="0">
+                        <Button x:Name="FavoritoButton"
+                                Text="{Binding EsFavorito, Converter={StaticResource FavoritoIconConverter}}"
+                                TextColor="{Binding EsFavorito, Converter={StaticResource FavoritoColorConverter}}"
+                                BackgroundColor="Transparent"
+                                FontSize="24"
+                                Padding="4,0"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MainViewModel}}, Path=ToggleFavoritoCommand}"
+                                CommandParameter="{Binding .}"/>
+                        <Label Text="→"
+                               TextColor="{DynamicResource Primary}"
+                               FontSize="20"
+                               VerticalOptions="Center"/>
+                    </StackLayout>
+                </Grid>
+
+                <!-- ========== VISTA PORTADA (tarjetas grandes con cover) ========== -->
+                <Grid Margin="0,8"
+                      BackgroundColor="{DynamicResource Surface}"
+                      Padding="0"
+                      WidthRequest="220"
+                      HeightRequest="330"
+                      HorizontalOptions="Center"
+                      IsVisible="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MainViewModel}}, Path=IsCoverView}"
+                      IsClippedToBounds="True">
+
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCoverTapped"/>
+                    </Grid.GestureRecognizers>
+
+                    <!-- Imagen de portada -->
+                    <Image Source="{Binding PortadaUrl}"
+                           Aspect="AspectFill"/>
+
+                    <!-- Fallback cuando no hay portada -->
+                    <Grid BackgroundColor="{DynamicResource SurfaceAlt}"
+                          IsVisible="{Binding PortadaUrl, Converter={StaticResource IsNullOrEmptyConverter}}">
+                        <Label Text="📖"
+                               FontSize="60"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"/>
+                    </Grid>
+
+                    <!-- Overlay gradiente oscuro en la parte inferior -->
+                    <BoxView Color="#99000000"
+                             HeightRequest="140"
+                             VerticalOptions="End"/>
+
+                    <!-- Botón de favorito (esquina superior derecha) -->
+                    <Button Text="{Binding EsFavorito, Converter={StaticResource FavoritoIconConverter}}"
+                            TextColor="{Binding EsFavorito, Converter={StaticResource FavoritoColorConverter}}"
+                            BackgroundColor="#66000000"
+                            FontSize="22"
+                            Padding="8"
+                            Margin="0,8,8,0"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MainViewModel}}, Path=ToggleFavoritoCommand}"
+                            CommandParameter="{Binding .}"/>
+
+                    <!-- Textos sobre el overlay -->
+                    <StackLayout VerticalOptions="End"
+                                 Padding="16,0,16,12"
+                                 Spacing="4">
+                        <Label Text="{Binding Titulo}"
+                               TextColor="White"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="2"/>
+
+                        <Label Text="{Binding Autor}"
+                               TextColor="#CCFFFFFF"
+                               FontSize="13"/>
+
+                        <FlexLayout>
+                            <Label Text="{Binding Genero}"
+                                   TextColor="{DynamicResource Primary}"
+                                   FontSize="11"
+                                   BackgroundColor="{DynamicResource TagBackground}"
+                                   Padding="6,2"/>
+                            <Label Text="{Binding Etiqueta}"
+                                   TextColor="#AAFFFFFF"
+                                   FontSize="11"
+                                   BackgroundColor="#33FFFFFF"
+                                   Padding="6,2"
+                                   Margin="5,0"/>
+                        </FlexLayout>
+                    </StackLayout>
+                </Grid>
+
+                </Grid>
+        </DataTemplate>
+    </ContentPage.Resources>
+
+    <Grid>
+        <CollectionView x:Name="HistoriasCollection"
+                        ItemsSource="{Binding Historias}"
+                        ItemTemplate="{StaticResource HistoriaTemplate}"
+                        SelectionMode="Single"
+                        BackgroundColor="{DynamicResource Background}"
+                        Margin="10"
+                        IsVisible="{Binding IsCoverView, Converter={StaticResource InvertBoolConverter}}"/>
+
+        <ScrollView IsVisible="{Binding IsCoverView}"
+                    BackgroundColor="{DynamicResource Background}">
+            <FlexLayout Padding="12,4"
+                        Wrap="Wrap"
+                        JustifyContent="Center"
+                        BindableLayout.ItemsSource="{Binding Historias}"
+                        BindableLayout.ItemTemplate="{StaticResource HistoriaTemplate}"/>
+        </ScrollView>
+    </Grid>
 
 </ContentPage>
